@@ -19,6 +19,14 @@ from torch import nn
 from .graph import Graph
 
 
+def _file_hash(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(4 * 1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 @dataclass(frozen=True)
 class Episode:
     id: str
@@ -206,7 +214,7 @@ class ConnectomeModel(nn.Module):
             "provenance": self.graph.provenance,
             "report": report,
             "files": {
-                name: hashlib.sha256((root / name).read_bytes()).hexdigest()
+                name: _file_hash(root / name)
                 for name in ("graph.npz", "body_ids.npy", "parameters.npz")
             },
         }
@@ -221,7 +229,7 @@ def load_policy(path, *, device="cpu", expected_graph=None):
     if m.get("schema") != "cnskit.policy.v1":
         raise ValueError("Unsupported policy format")
     for name in ("graph.npz", "body_ids.npy", "parameters.npz"):
-        if hashlib.sha256((root / name).read_bytes()).hexdigest() != m["files"][name]:
+        if _file_hash(root / name) != m["files"][name]:
             raise ValueError(f"Checkpoint integrity failed: {name}")
     graph = Graph(
         np.load(root / "body_ids.npy", allow_pickle=False),

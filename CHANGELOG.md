@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Stream checkpoint hashing and retain only trainable tensors during best-epoch selection.
+- Publish Linux Python 3.11 / 3.13 CI and document custom PyTorch training loops.
+
 ## 0.2.0
 
 - Public source release under Apache-2.0 in OpenUploading.

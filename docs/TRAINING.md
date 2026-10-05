@@ -32,6 +32,26 @@ Edges are stored sparsely and the sparse operator is constructed once. The recur
 
 ## Command line
 
+### Your own training loop
+
+`ConnectomeModel` is a regular `torch.nn.Module`. For task losses outside the built-in MSE / cross-entropy trainer, call its differentiable `forward` or `step` in your own optimization loop:
+
+```python
+import torch
+
+optimizer = torch.optim.Adam((p for p in model.parameters() if p.requires_grad), lr=0.001)
+optimizer.zero_grad()
+predictions, state = model(observations)  # [batch, time, input_size]
+loss = your_task_loss(predictions, targets)
+loss.backward()
+torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+optimizer.step()
+```
+
+The application owns normalization, episode boundaries, loss masking and validation in a custom loop. Detach carried state at truncation boundaries. This extension point does not implement an RL algorithm or automatically make an environment differentiable.
+
+## Dataset files and CLI
+
 Save each split as an NPZ with `observations [episodes,time,input]`, aligned `targets`, string `episode_ids`, and optional boolean `mask [episodes,time]`. Never use object arrays. Variable-length episodes can use the Python API; a mask excludes loss, it does not remove padded transitions.
 
 `task.json`:

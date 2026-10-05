@@ -1,5 +1,7 @@
 # CNSKit
 
+[![SDK checks](https://github.com/OpenUploading/cnskit/actions/workflows/tests.yml/badge.svg)](https://github.com/OpenUploading/cnskit/actions/workflows/tests.yml)
+
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-427B80)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-6872AD)](pyproject.toml)
 

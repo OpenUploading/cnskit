@@ -208,3 +208,65 @@ def test_cli_training_and_prediction(tmp_path):
         np.load(tmp_path / "prediction.npy"), load_policy(tmp_path / "policy").predict(x)[0]
     )
     assert subprocess.run(command, capture_output=True).returncode != 0
+    evaluation = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "cnskit.cli",
+            "evaluate",
+            "--policy",
+            str(tmp_path / "policy"),
+            "--data",
+            str(tmp_path / "validation.npz"),
+            "--objective",
+            "regression",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    expected = Trainer(load_policy(tmp_path / "policy")).evaluate(episodes("validation", 2))
+    assert json.loads(evaluation.stdout) == expected
+
+
+def test_unlabeled_targets_do_not_affect_loss_or_training():
+    m = model()
+    e = episodes("train", 1)[0]
+    mask = np.arange(16) % 2 == 0
+    targets = e.targets.copy()
+    targets[~mask] = np.nan
+    partial = Episode("partial", e.observations, targets, mask)
+    t = Trainer(m, tbptt=4)
+    assert t.evaluate([partial]) == t.evaluate([Episode("clean", e.observations, e.targets, mask)])
+    t.fit([partial], [Episode("valid", e.observations, targets, mask)], epochs=2)
+    targets[0] = np.nan
+    with pytest.raises(ValueError):
+        t.evaluate([partial])
+    classes = Episode("class", np.ones((3, 2)), np.array([-1, 0, 1]), np.array([False, True, True]))
+    classes.validate(2, 2, "classification")
+    classes.targets[1] = -1
+    with pytest.raises(ValueError):
+        classes.validate(2, 2, "classification")
+    classes.targets[1] = 0
+    classes.observations[0] = np.nan
+    with pytest.raises(ValueError):
+        classes.validate(2, 2, "classification")
+
+
+def test_early_stopping_restores_absolute_best_epoch():
+    t = Trainer(model())
+    train, valid = episodes("train", 2), episodes("validation", 2)
+    report = t.fit(train, valid, epochs=20, patience=2, min_delta=100.0)
+    assert report["epochs_completed"] == 3
+    assert report["stopped_early"]
+    best = min(report["history"], key=lambda item: item["loss"])
+    assert report["best_epoch"] == best["epoch"]
+    assert t.evaluate(valid)["loss"] == pytest.approx(best["loss"])
+
+
+@pytest.mark.parametrize(
+    "options", [{"patience": 0}, {"patience": True}, {"min_delta": -1}, {"min_delta": float("nan")}]
+)
+def test_invalid_early_stopping_configuration(options):
+    with pytest.raises(ValueError):
+        Trainer(model()).fit(episodes("train", 1), episodes("validation", 1), **options)

@@ -6,7 +6,7 @@
 - Regression/classification with episode masks and held-out model selection.
 - Readout, adapter and bounded dynamics adaptation with a fixed sparse graph.
 - Explicit-state, batched inference; portable graph-bound checkpoints.
-- Local train/predict CLI; reproducible synthetic and real-graph validation examples.
+- Local train/predict/evaluate CLI; reproducible synthetic and real-graph validation examples.
 
 ## Next investigations
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2
+
+- Add optional patience-based early stopping while restoring the absolute best validation epoch.
+- Support unlabeled target placeholders under boolean masks (NaN for regression, -1 for classification).
+- Add `cnskit evaluate` for held-out datasets and expose learning symbols to IDEs.
+- Extend regression coverage for masked supervision, stopping criteria and CLI evaluation.
+
 ## 0.2.1
 
 - Stream checkpoint hashing and retain only trainable tensors during best-epoch selection.

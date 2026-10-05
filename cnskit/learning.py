@@ -35,6 +35,8 @@ class Episode:
     mask: np.ndarray | None = None
 
     def validate(self, inputs, outputs, objective):
+        if objective not in ("regression", "classification"):
+            raise ValueError("Unknown objective")
         x, y = np.asarray(self.observations), np.asarray(self.targets)
         if (
             not isinstance(self.id, str)
@@ -45,19 +47,19 @@ class Episode:
             or not np.isfinite(x).all()
         ):
             raise ValueError("Invalid episode ID or observations")
+        mask = np.ones(len(x), dtype=bool) if self.mask is None else np.asarray(self.mask)
+        if mask.shape != (len(x),) or mask.dtype != bool or not mask.any():
+            raise ValueError("Mask must select at least one timestep")
         if objective == "regression":
-            if y.shape != (len(x), outputs) or not np.isfinite(y).all():
+            if y.shape != (len(x), outputs) or not np.isfinite(y[mask]).all():
                 raise ValueError("Regression targets must be finite [time, outputs]")
         elif (
             y.shape != (len(x),)
             or y.dtype.kind not in "iu"
-            or np.any(y < 0)
-            or np.any(y >= outputs)
+            or np.any(y[mask] < 0)
+            or np.any(y[mask] >= outputs)
         ):
             raise ValueError("Classification targets must be integer class IDs [time]")
-        mask = np.ones(len(x), dtype=bool) if self.mask is None else np.asarray(self.mask)
-        if mask.shape != (len(x),) or mask.dtype != bool or not mask.any():
-            raise ValueError("Mask must select at least one timestep")
         return x, y, mask
 
 
@@ -326,12 +328,16 @@ class Trainer:
             result["accuracy"] = correct / count
         return result
 
-    def fit(self, train, validation, *, epochs=30):
+    def fit(self, train, validation, *, epochs=30, patience=None, min_delta=0.0):
         train, validation = self._checked(train), self._checked(validation)
         if {e.id for e in train} & {e.id for e in validation}:
             raise ValueError("Training and validation episode IDs overlap")
         if type(epochs) is not int or epochs < 1:
             raise ValueError("epochs must be positive")
+        if patience is not None and (type(patience) is not int or patience < 1):
+            raise ValueError("patience must be a positive integer or None")
+        if not math.isfinite(min_delta) or min_delta < 0:
+            raise ValueError("min_delta must be finite and nonnegative")
         # Fit normalization only on training episodes, with bounded temporary memory.
         count = 0
         mean = np.zeros(self.model.config["input_size"])
@@ -357,6 +363,9 @@ class Trainer:
         rng = np.random.default_rng(self.seed)
         best = float("inf")
         best_state = None
+        best_epoch = 0
+        progress_best = float("inf")
+        stale_epochs = 0
         history = []
         start = time.perf_counter()
         for epoch in range(epochs):
@@ -395,12 +404,20 @@ class Trainer:
             history.append({"epoch": epoch + 1, **metric})
             if metric["loss"] < best:
                 best = metric["loss"]
+                best_epoch = epoch + 1
                 # The graph is fixed: do not duplicate millions of edges each epoch.
                 best_state = {
                     name: parameter.detach().clone()
                     for name, parameter in self.model.named_parameters()
                     if parameter.requires_grad
                 }
+            if metric["loss"] < progress_best - min_delta:
+                progress_best = metric["loss"]
+                stale_epochs = 0
+            else:
+                stale_epochs += 1
+            if patience is not None and stale_epochs >= patience:
+                break
         with torch.no_grad():
             for name, parameter in self.model.named_parameters():
                 if name in best_state:
@@ -414,6 +431,11 @@ class Trainer:
             "validation_ids": [e.id for e in validation],
             "history": history,
             "best_validation_loss": best,
+            "best_epoch": best_epoch,
+            "epochs_completed": len(history),
+            "stopped_early": len(history) < epochs,
+            "patience": patience,
+            "min_delta": min_delta,
             "seconds": time.perf_counter() - start,
             "trainable_parameters": sum(
                 p.numel() for p in self.model.parameters() if p.requires_grad

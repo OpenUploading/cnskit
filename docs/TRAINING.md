@@ -52,6 +52,10 @@ The application owns normalization, episode boundaries, loss masking and validat
 
 ## Dataset files and CLI
 
+For partially labeled sequences, masked-out regression targets may be `NaN` and masked-out classification targets may be `-1`. Observations must remain finite at every timestep: unlabeled observations still advance the recurrent state. Every episode needs at least one labeled step.
+
+Use `trainer.fit(train, validation, epochs=100, patience=5, min_delta=1e-4)` to stop after five epochs without a sufficient validation-loss improvement. `min_delta` is an absolute loss threshold measured against the last significant improvement. The model always restores the absolute lowest-loss epoch, including improvements smaller than this threshold. The report records `best_epoch`, `epochs_completed` and `stopped_early`. The default `patience=None` runs the full budget. Keep test episodes separate from validation used for stopping.
+
 Save each split as an NPZ with `observations [episodes,time,input]`, aligned `targets`, string `episode_ids`, and optional boolean `mask [episodes,time]`. Never use object arrays. Variable-length episodes can use the Python API; a mask excludes loss, it does not remove padded transitions.
 
 `task.json`:
@@ -62,7 +66,9 @@ Save each split as an NPZ with `observations [episodes,time,input]`, aligned `ta
   "subgraph_ids": [12032, 10001, 10010],
   "model": {"input_ids": [12032], "readout_ids": [10001, 10010], "input_size": 4, "output_size": 2, "mode": "adapters", "seed": 7},
   "trainer": {"objective": "regression", "lr": 0.01, "tbptt": 32, "seed": 7},
-  "epochs": 30
+  "epochs": 30,
+  "patience": 5,
+  "min_delta": 0.0001
 }
 ```
 
@@ -71,6 +77,7 @@ The three-cell selection above illustrates the file format; choose a task-releva
 ```sh
 cnskit train --config task.json --train train.npz --validation validation.npz --out runs/task
 cnskit predict --policy runs/task --input observations.npy --out predictions.npy
+cnskit evaluate --policy runs/task --data test.npz --objective regression
 ```
 
 Outputs must be new paths. `model.save()` exports an inference bundle, not an exact optimizer/RNG resume snapshot. Continue fitting with `Trainer(load_policy(...))` to start a new optimizer. Checkpoint hashes catch corruption and graph mismatches, not malicious replacement of an entire unsigned bundle. Load only trusted artifacts and keep your own provenance record.

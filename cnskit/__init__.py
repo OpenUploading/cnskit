@@ -1,8 +1,13 @@
 """Task training and inference on explicit connectome graphs."""
 
+from typing import TYPE_CHECKING
+
 from .graph import Graph
 
-__all__ = ["Graph"]
+if TYPE_CHECKING:
+    from .learning import ConnectomeModel, Episode, Trainer, load_policy
+
+__all__ = ["Graph", "ConnectomeModel", "Episode", "Trainer", "load_policy"]
 
 
 def __getattr__(name):

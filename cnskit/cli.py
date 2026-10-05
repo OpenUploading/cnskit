@@ -44,10 +44,15 @@ def main():
     predict.add_argument("--input", required=True)
     predict.add_argument("--out", required=True)
     predict.add_argument("--device", default="cpu")
+    evaluate = sub.add_parser("evaluate", help="Evaluate a held-out episode dataset")
+    evaluate.add_argument("--policy", required=True)
+    evaluate.add_argument("--data", required=True)
+    evaluate.add_argument("--objective", choices=["regression", "classification"], required=True)
+    evaluate.add_argument("--device", default="cpu")
     a = p.parse_args()
     from .learning import ConnectomeModel, Trainer, load_policy
 
-    if Path(a.out).exists():
+    if a.command != "evaluate" and Path(a.out).exists():
         p.error("Output already exists; choose a fresh path")
     if a.command == "train":
         cfg = json.loads(Path(a.config).read_text(encoding="utf8"))
@@ -55,10 +60,18 @@ def main():
         model = ConnectomeModel(graph, **cfg["model"]).to(a.device)
         trainer = Trainer(model, **cfg.get("trainer", {}))
         report = trainer.fit(
-            load_episodes(a.train), load_episodes(a.validation), epochs=cfg.get("epochs", 30)
+            load_episodes(a.train),
+            load_episodes(a.validation),
+            epochs=cfg.get("epochs", 30),
+            patience=cfg.get("patience"),
+            min_delta=cfg.get("min_delta", 0.0),
         )
         model.save(a.out, report=report)
         print(json.dumps({"best_validation_loss": report["best_validation_loss"], "policy": a.out}))
+    elif a.command == "evaluate":
+        model = load_policy(a.policy, device=a.device)
+        metrics = Trainer(model, objective=a.objective).evaluate(load_episodes(a.data))
+        print(json.dumps(metrics, allow_nan=False))
     else:
         model = load_policy(a.policy, device=a.device)
         x = np.load(a.input, allow_pickle=False)

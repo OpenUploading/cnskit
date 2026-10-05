@@ -70,7 +70,7 @@ model = ConnectomeModel(
 )
 # train_episodes and validation_episodes contain YOUR aligned inputs and targets.
 report = Trainer(model, objective="regression", tbptt=32).fit(
-    train_episodes, validation_episodes, epochs=30,
+    train_episodes, validation_episodes, epochs=30, patience=5,
 )
 model.save("runs/my-policy", report=report)
 ```

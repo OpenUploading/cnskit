@@ -4,7 +4,7 @@ Measured 2026-10-04 (Pacific time), Windows, Intel Core i9-13900H, Python 3.13.1
 
 ## Numerical and API checks
 
-31 automated tests cover legacy graph import/runtime behavior plus sparse/dense recurrence agreement, finite-difference adapter gradients, episode isolation, training-only normalization, masked classification, fixed-mode parameters, streaming chunk equivalence, CLI training/prediction, checkpoint replay and corruption rejection. CI uses tiny artificial fixtures, not remote dataset downloads.
+31 automated tests cover legacy graph import/runtime behavior plus sparse/dense recurrence agreement, finite-difference adapter gradients, episode isolation, training-only normalization, masked classification, fixed-mode parameters, streaming chunk equivalence, CLI training/prediction, checkpoint replay and corruption rejection. The test suite uses tiny artificial fixtures, not remote dataset downloads. The GitHub Actions workflow is prepared locally; publishing it awaits the account owner's GitHub identity verification for workflow scope. Local checks passed.
 
 ## Real MaleCNS graph
 

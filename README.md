@@ -7,7 +7,7 @@
 
 CNSKit connects MaleCNS graph data to a practical Python workflow: bind observations to selected neurons, train a readout or input adapter, evaluate held-out episodes, and export a stateful inference model. The graph stays sparse and its body IDs and source provenance travel with the model.
 
-[Quickstart](#quickstart) 路 [Training guide](docs/TRAINING.md) 路 [MaleCNS data](docs/MALECNS.md) 路 [API](docs/LEARNING_API.md) 路 [Evidence](docs/VALIDATION.md)
+[Quickstart](#quickstart)  |  [Training guide](docs/TRAINING.md)  |  [MaleCNS data](docs/MALECNS.md)  |  [API](docs/LEARNING_API.md)  |  [Evidence](docs/VALIDATION.md)
 
 ![CNSKit: graph-grounded task training and stateful inference](docs/assets/cnskit-overview.svg)
 

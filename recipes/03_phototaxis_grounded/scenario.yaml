@@ -1,0 +1,27 @@
+scenario_id: phototaxis_grounded_v0
+world:
+  backend: unreal
+  task: phototaxis
+  observation_hz: 60
+stimuli:
+  visual:
+    mapper: optic_flow_and_loom
+    realism_level: grounded
+    target_regions: [retina, lamina, medulla, lobula]
+actions:
+  decoder: ethology_event
+  target: unreal_fly
+  action_space: [idle, orient_left, orient_right, approach]
+adaptation:
+  preset: readout_calibration
+  trainable_params_max: 25000
+  connectome_edges: frozen
+objective:
+  reward: approach_preferred_light
+  episode_seconds: 6
+evidence:
+  record_video: false
+  record_spike_view: true
+  export_run_log: true
+metadata:
+  modality: visual preference scenario scaffold

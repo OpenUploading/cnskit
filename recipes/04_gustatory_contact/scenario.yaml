@@ -1,0 +1,27 @@
+scenario_id: gustatory_contact_v0
+world:
+  backend: unreal
+  task: feeding_contact
+  observation_hz: 60
+stimuli:
+  gustatory:
+    mapper: contact_chemistry
+    realism_level: grounded
+    target_regions: [labellum, vnc]
+actions:
+  decoder: ethology_event
+  target: unreal_fly
+  action_space: [idle, probe, feed, withdraw]
+adaptation:
+  preset: none
+  trainable_params_max: 0
+  connectome_edges: frozen
+objective:
+  reward: inspect_proboscis_extension_sequence
+  episode_seconds: 6
+evidence:
+  record_video: false
+  record_spike_view: true
+  export_run_log: true
+metadata:
+  note: adapter scaffold for PER-like visual demos; not biological validation

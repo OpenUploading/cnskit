@@ -1,0 +1,8 @@
+CNSKit
+Copyright 2026 Uploading contributors
+
+This release builds on the CNS Tinker runtime and APIs maintained by Uploading.
+The CNSKit software is distributed under the Apache License, Version 2.0.
+
+MaleCNS data is not included. Data attribution and licensing are independent of
+the software license. See docs/MALECNS.md and docs/LICENSING.md.

@@ -1,0 +1,31 @@
+scenario_id: loom_escape_v0
+world:
+  backend: unreal
+  task: loom_escape
+  observation_hz: 60
+stimuli:
+  visual:
+    mapper: optic_flow_and_loom
+    realism_level: grounded
+    target_regions: [retina, lamina, medulla, lobula]
+  mechanosensory:
+    mapper: wind_contact
+    realism_level: schematic
+    target_regions: [johnston_organ, central_complex]
+actions:
+  decoder: ethology_event
+  target: unreal_fly
+  action_space: [idle, brace, escape, flight, landing]
+adaptation:
+  preset: none
+  trainable_params_max: 0
+  connectome_edges: frozen
+objective:
+  reward: inspect_escape_sequence
+  episode_seconds: 6
+evidence:
+  record_video: false
+  record_spike_view: true
+  export_run_log: true
+metadata:
+  claim: real wiring plus synthetic dynamics when MaleCNS data is mounted; not biological validation

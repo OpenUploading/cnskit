@@ -1,0 +1,19 @@
+{
+  "seed": 7,
+  "epochs": 30,
+  "results": {
+    "synthetic_graph": {
+      "test_mse": 0.0013796378334518522,
+      "parameters": 57
+    },
+    "zero_edges": {
+      "test_mse": 0.0007020199118414894,
+      "parameters": 57
+    },
+    "vanilla_rnn": {
+      "test_mse": 0.0009369623148813844,
+      "parameters": 51
+    }
+  },
+  "scope": "Synthetic task; no anatomical or model superiority claim"
+}

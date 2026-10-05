@@ -1,0 +1,28 @@
+scenario_id: odor_liveproof_v0
+world:
+  backend: webgl
+  task: odor_liveproof
+  observation_hz: 60
+stimuli:
+  olfactory:
+    mapper: plume_receptor_projection
+    realism_level: schematic
+    target_regions: [antennal_lobe, mushroom_body]
+actions:
+  decoder: ethology_event
+  target: liveproof
+  action_space: [idle, sample, orient, approach]
+adaptation:
+  preset: none
+  trainable_params_max: 0
+  connectome_edges: frozen
+objective:
+  reward: inspect_odor_pathway_activation
+  episode_seconds: 6
+evidence:
+  record_video: false
+  record_spike_view: true
+  export_run_log: true
+metadata:
+  product_surface: Claude Code v19 live-proof odor button
+  claim: schematic olfactory drive for product proof; not biological validation

@@ -1,0 +1,32 @@
+scenario_id: photon_saber_readout_v0
+world:
+  backend: unreal
+  task: rhythm_saber
+  observation_hz: 60
+stimuli:
+  visual:
+    mapper: optic_flow_and_loom
+    realism_level: schematic
+    target_regions: [retina, lamina, medulla, lobula]
+  synthetic:
+    mapper: arcade_target
+    realism_level: schematic
+    target_regions: [task_channel]
+actions:
+  decoder: synthetic_saber_readout_v1
+  target: gamepad
+  action_space: [swing_left, swing_right]
+adaptation:
+  preset: none
+  trainable_params_max: 0
+  connectome_edges: frozen
+objective:
+  reward: hit_targets_minus_misses
+  episode_seconds: 8
+evidence:
+  record_video: false
+  record_spike_view: true
+  export_run_log: true
+metadata:
+  readout: authored task-population readout, not trained, not anatomical VNC mapping
+  game_gesture_boundary: synthetic arcade task, not natural fly cognition

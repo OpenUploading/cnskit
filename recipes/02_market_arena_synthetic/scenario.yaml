@@ -1,0 +1,27 @@
+scenario_id: market_arena_synthetic_v0
+world:
+  backend: unreal
+  task: market_arena
+  observation_hz: 30
+stimuli:
+  synthetic:
+    mapper: arcade_target
+    realism_level: schematic
+    target_regions: [task_channel]
+actions:
+  decoder: vnc_to_gamepad
+  target: market
+  action_space: [wait, buy, sell, hedge]
+adaptation:
+  preset: interface_adapter
+  trainable_params_max: 250000
+  connectome_edges: frozen
+objective:
+  reward: toy_profit_minus_risk
+  episode_seconds: 8
+evidence:
+  record_video: false
+  record_spike_view: true
+  export_run_log: true
+metadata:
+  finance_boundary: toy synthetic market; not financial advice

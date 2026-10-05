@@ -1,0 +1,27 @@
+{
+  "scope": "Real anatomy; authored dynamics and synthetic temporal-filter targets",
+  "python": "3.13.14",
+  "torch": "2.14.1+cpu",
+  "device": "cpu",
+  "graph_nodes": 165122,
+  "graph_edges": 25563197,
+  "graph_fingerprint": "c350f6f3e9e2a390bcef27e2bbd1e2b8393c2f5d549bc4143a599ef3ec0e510d",
+  "graph_load_seconds": 1.3924804000000677,
+  "full_graph_steps": 5,
+  "full_graph_seconds": 2.316918600000008,
+  "scipy_reference_max_abs_error": 5.960464477539063e-08,
+  "training_subgraph_nodes": 128,
+  "training_subgraph_edges": 2291,
+  "test_before": {
+    "loss": 0.32794901728630066,
+    "labeled_steps": 128,
+    "episodes": 4
+  },
+  "test_after": {
+    "loss": 0.0005559839519264642,
+    "labeled_steps": 128,
+    "episodes": 4
+  },
+  "best_validation_loss": 0.00017839388965512626,
+  "checkpoint_replay_exact": true
+}

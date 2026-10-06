@@ -9,6 +9,7 @@
 | `model.step(x, state=None)` | Torch output and next state for `[batch,input]`; differentiable |
 | `model(x, state=None)` | Torch sequence output for `[batch,time,input]`; differentiable |
 | `model.predict(x, state=None)` | No-gradient NumPy predictions plus explicit detached Torch state |
+| `cnskit.inference.predict_file(model, input_path, output_path, chunk_size=1024)` | Memory-map a numeric NPY, infer one episode at a time, publish a new NPY after success |
 | `Trainer(model, objective, lr, tbptt, grad_clip, seed)` | Local supervised sequence trainer |
 | `trainer.fit(train, validation, epochs=30, patience=None, min_delta=0.0)` | Fit normalization, optionally stop early, restore best validation epoch, return report |
 | `trainer.evaluate(episodes, chunk_size=1024)` | Carry state across chunks, reset per episode; masked MSE or cross-entropy, plus classification accuracy |

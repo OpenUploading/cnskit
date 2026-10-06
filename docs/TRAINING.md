@@ -94,6 +94,16 @@ cnskit evaluate --policy runs/task --data test.npz --objective regression --chun
 
 Use a positive chunk size, or `chunk_size=None` in Python for whole-episode evaluation. Chunking bounds model input and prediction buffers on the compute device, not the resident graph or dataset. The NPZ loader still loads arrays into host memory; this is not disk-streaming data loading. Loss reductions can differ slightly from whole-episode evaluation due to floating-point summation order. Chunk size does not change recurrent state transitions.
 
+### File-backed inference
+
+```sh
+cnskit predict --policy runs/task --input observations.npy --out predictions.npy --chunk-size 256
+```
+
+The input must be an uncompressed real numeric NPY array `[episode,time,input]`. Input is memory-mapped; predictions are written incrementally as float32 `[episode,time,output]`. One episode is processed at a time, carrying recurrent state across chunks and resetting between episodes. C-order and Fortran-order arrays are supported. Conversion buffers scale with the selected chunk rather than total sequence length; the model, sparse graph and a single episode's recurrent state remain resident. OS file caching may still affect observed process memory.
+
+The output appears only after successful inference. Existing outputs are never overwritten, including when another process creates the destination during prediction. Publication uses a temporary file and a hard link in the destination directory; the filesystem must support hard links. Normal exceptions clean up the temporary file. Forced termination can leave a `.cnskit-predict-*.tmp` file, but does not expose an incomplete destination. In-memory `model.predict` is unchanged. Results may differ slightly from parallel multi-episode inference due to floating-point kernel choices.
+
 ### Task comparisons
 
 Use the same observation information, episode splits and optimization budget for an observation-only model, a recurrent baseline and graph ablations. Report multiple seeds, task error/accuracy, latency, memory, parameter count and graph selection. The included example compares with memoryless ridge; this alone does not establish an anatomical advantage. Reward-only RL and arbitrary topology training are not implemented.

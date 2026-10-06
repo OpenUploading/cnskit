@@ -44,6 +44,7 @@ def main():
     predict.add_argument("--input", required=True)
     predict.add_argument("--out", required=True)
     predict.add_argument("--device", default="cpu")
+    predict.add_argument("--chunk-size", type=int, default=1024)
     evaluate = sub.add_parser("evaluate", help="Evaluate a held-out episode dataset")
     evaluate.add_argument("--policy", required=True)
     evaluate.add_argument("--data", required=True)
@@ -76,11 +77,11 @@ def main():
         )
         print(json.dumps(metrics, allow_nan=False))
     else:
+        from .inference import predict_file
+
         model = load_policy(a.policy, device=a.device)
-        x = np.load(a.input, allow_pickle=False)
-        prediction, _ = model.predict(x)
-        with Path(a.out).open("xb") as f:
-            np.save(f, prediction, allow_pickle=False)
+        report = predict_file(model, a.input, a.out, chunk_size=a.chunk_size)
+        print(json.dumps(report))
 
 
 if __name__ == "__main__":

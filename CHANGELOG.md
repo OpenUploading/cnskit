@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.4
+
+- Stream file-based prediction from memory-mapped NPY inputs into incrementally written NPY outputs.
+- Process one episode at a time with configurable time chunks and explicit state reset.
+- Publish predictions only on success without overwriting existing or concurrently created files.
+- Verify C/Fortran input layouts, state continuity, late failures and destination races.
+
 ## 0.2.3
 
 - Bound evaluation prediction buffers with state-preserving chunks (default 1,024 steps); add CLI `--chunk-size`.

@@ -4,7 +4,7 @@ Measured 2026-10-04 (Pacific time), Windows, Intel Core i9-13900H, Python 3.13.1
 
 ## Numerical and API checks
 
-37 automated tests cover legacy graph import/runtime behavior plus sparse/dense recurrence agreement, finite-difference adapter gradients, episode isolation, training-only normalization, masked classification, fixed-mode parameters, streaming chunk equivalence, CLI training/prediction/evaluation, early stopping, unlabeled target placeholders, checkpoint replay and corruption rejection. The test suite uses tiny artificial fixtures, not remote dataset downloads. The [GitHub Actions workflow](https://github.com/OpenUploading/cnskit/actions/workflows/tests.yml) runs the suite and package build on Python 3.11 and 3.13; consult the linked run for its current status.
+43 automated tests cover legacy graph import/runtime behavior plus sparse/dense recurrence agreement, finite-difference adapter gradients, episode isolation, training-only normalization, masked classification, fixed-mode parameters, streaming chunk equivalence, CLI training/prediction/evaluation, early stopping, unlabeled target placeholders, checkpoint replay and corruption rejection. The test suite uses tiny artificial fixtures, not remote dataset downloads. The [GitHub Actions workflow](https://github.com/OpenUploading/cnskit/actions/workflows/tests.yml) runs the suite and package build on Python 3.11 and 3.13; consult the linked run for its current status.
 
 ## Real MaleCNS graph
 

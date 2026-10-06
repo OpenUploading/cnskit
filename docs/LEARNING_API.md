@@ -11,7 +11,7 @@
 | `model.predict(x, state=None)` | No-gradient NumPy predictions plus explicit detached Torch state |
 | `Trainer(model, objective, lr, tbptt, grad_clip, seed)` | Local supervised sequence trainer |
 | `trainer.fit(train, validation, epochs=30, patience=None, min_delta=0.0)` | Fit normalization, optionally stop early, restore best validation epoch, return report |
-| `trainer.evaluate(episodes)` | Reset per episode; masked MSE or cross-entropy, plus classification accuracy |
+| `trainer.evaluate(episodes, chunk_size=1024)` | Carry state across chunks, reset per episode; masked MSE or cross-entropy, plus classification accuracy |
 | `model.save(new_directory, report=...)` | Save graph, parameters and provenance without pickle |
 | `load_policy(path, device='cpu', expected_graph=None)` | Verify file hashes and graph/channel binding before loading |
 

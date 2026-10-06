@@ -299,7 +299,10 @@ class Trainer:
         )
 
     @torch.no_grad()
-    def evaluate(self, episodes):
+    def evaluate(self, episodes, *, chunk_size=1024):
+        """Bound prediction memory; carry state within, reset between episodes."""
+        if chunk_size is not None and (type(chunk_size) is not int or chunk_size < 1):
+            raise ValueError("chunk_size must be a positive integer or None")
         items = self._checked(episodes)
         total = 0.0
         count = 0
@@ -309,20 +312,28 @@ class Trainer:
             x, y, mask = e.validate(
                 self.model.config["input_size"], self.model.config["output_size"], self.objective
             )
-            p, _ = self.model(x[None])
-            p = p[0, torch.tensor(mask, device=self.model.device)]
-            target = torch.as_tensor(
-                y[mask],
-                device=self.model.device,
-                dtype=torch.float32 if self.objective == "regression" else torch.long,
-            )
-            loss = float(self._loss(p, target))
-            if not math.isfinite(loss):
-                raise FloatingPointError("Nonfinite evaluation loss")
-            total += loss * int(mask.sum())
-            count += int(mask.sum())
-            if self.objective == "classification":
-                correct += int((p.argmax(-1) == target).sum())
+            state = None
+            width = len(x) if chunk_size is None else chunk_size
+            for left in range(0, len(x), width):
+                right = min(left + width, len(x))
+                prediction, state = self.model(x[None, left:right], state)
+                selected = mask[left:right]
+                if not selected.any():
+                    continue
+                prediction = prediction[0, torch.tensor(selected, device=self.model.device)]
+                target = torch.as_tensor(
+                    y[left:right][selected],
+                    device=self.model.device,
+                    dtype=torch.float32 if self.objective == "regression" else torch.long,
+                )
+                loss = float(self._loss(prediction, target))
+                if not math.isfinite(loss):
+                    raise FloatingPointError("Nonfinite evaluation loss")
+                labeled = int(selected.sum())
+                total += loss * labeled
+                count += labeled
+                if self.objective == "classification":
+                    correct += int((prediction.argmax(-1) == target).sum())
         result = {"loss": total / count, "labeled_steps": count, "episodes": len(items)}
         if self.objective == "classification":
             result["accuracy"] = correct / count

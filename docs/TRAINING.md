@@ -84,4 +84,16 @@ Outputs must be new paths. `model.save()` exports an inference bundle, not an ex
 
 ## Evaluate whether the graph helps
 
+### Long-sequence evaluation
+
+`trainer.evaluate(episodes, chunk_size=1024)` processes each episode in contiguous chunks. Unlabeled chunks still advance state; separate episodes reset it. Loss is weighted by labeled timesteps, including short final chunks. Classification accuracy aggregates correct predictions across all labeled steps. Training-time validation uses the same default chunking.
+
+```sh
+cnskit evaluate --policy runs/task --data test.npz --objective regression --chunk-size 256
+```
+
+Use a positive chunk size, or `chunk_size=None` in Python for whole-episode evaluation. Chunking bounds model input and prediction buffers on the compute device, not the resident graph or dataset. The NPZ loader still loads arrays into host memory; this is not disk-streaming data loading. Loss reductions can differ slightly from whole-episode evaluation due to floating-point summation order. Chunk size does not change recurrent state transitions.
+
+### Task comparisons
+
 Use the same observation information, episode splits and optimization budget for an observation-only model, a recurrent baseline and graph ablations. Report multiple seeds, task error/accuracy, latency, memory, parameter count and graph selection. The included example compares with memoryless ridge; this alone does not establish an anatomical advantage. Reward-only RL and arbitrary topology training are not implemented.

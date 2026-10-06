@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.2.3
 
+- Bound evaluation prediction buffers with state-preserving chunks (default 1,024 steps); add CLI `--chunk-size`.
+- Test regression and classification equivalence, unlabeled chunks, episode resets and uneven-length metric weighting.
 - Add a complete real-MaleCNS task walkthrough with user-supplied regression datasets, three-seed zero-edge ablations and verified stateful inference.
 - Replace illustrative README neuron bindings with runnable commands, explicit outputs and measured limitations.
 

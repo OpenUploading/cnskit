@@ -79,7 +79,7 @@ cnskit evaluate --policy runs/malecns-task/policy --data runs/malecns-task/test.
 cnskit predict --policy runs/malecns-task/policy --input runs/malecns-task/observations.npy --out runs/replayed.npy
 ```
 
-The example checks exact checkpoint replay and chunked stateful inference. Output paths must be new. It loads the full prepared graph before selecting a subgraph; selection does not eliminate the import's memory requirement.
+The example checks exact checkpoint replay and chunked stateful inference. Evaluation processes at most 1,024 timesteps per model call by default; use `--chunk-size 256` for smaller prediction buffers. Dataset arrays and the graph still reside in memory. Output paths must be new. It loads the full prepared graph before selecting a subgraph; selection does not eliminate the import's memory requirement.
 
 ## Bring your own task
 
@@ -94,7 +94,7 @@ Input/output dimensions are inferred from your data. The default neuron selectio
 ## Evidence and current limits
 
 - **Numerical correctness:** five full-graph forward steps on 165,122 neurons and 25,563,197 edges matched an independent SciPy calculation to 5.96e-8 maximum absolute error.
-- **Software verification:** 37 tests cover training, masking, early stopping, explicit-state inference, CLI evaluation and checkpoint integrity; CI runs Python 3.11 and 3.13.
+- **Software verification:** 43 tests cover training, masking, early stopping, explicit-state inference, CLI evaluation and checkpoint integrity; CI runs Python 3.11 and 3.13.
 - **Task value:** the included temporal-filter experiments test the workflow. They do not establish a MaleCNS advantage; the published synthetic-graph comparison favors the zero-edge ablation.
 
 See [measurements and reproducible commands](docs/VALIDATION.md). Full-graph differentiation, CUDA throughput, optimizer-state resume and biological behavior validation remain open work. The SDK is suitable for controlled research experiments; it is not yet a production training platform.

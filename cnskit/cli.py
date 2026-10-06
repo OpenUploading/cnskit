@@ -49,6 +49,7 @@ def main():
     evaluate.add_argument("--data", required=True)
     evaluate.add_argument("--objective", choices=["regression", "classification"], required=True)
     evaluate.add_argument("--device", default="cpu")
+    evaluate.add_argument("--chunk-size", type=int, default=1024)
     a = p.parse_args()
     from .learning import ConnectomeModel, Trainer, load_policy
 
@@ -70,7 +71,9 @@ def main():
         print(json.dumps({"best_validation_loss": report["best_validation_loss"], "policy": a.out}))
     elif a.command == "evaluate":
         model = load_policy(a.policy, device=a.device)
-        metrics = Trainer(model, objective=a.objective).evaluate(load_episodes(a.data))
+        metrics = Trainer(model, objective=a.objective).evaluate(
+            load_episodes(a.data), chunk_size=a.chunk_size
+        )
         print(json.dumps(metrics, allow_nan=False))
     else:
         model = load_policy(a.policy, device=a.device)

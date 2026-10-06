@@ -220,13 +220,18 @@ def test_cli_training_and_prediction(tmp_path):
             str(tmp_path / "validation.npz"),
             "--objective",
             "regression",
+            "--chunk-size",
+            "3",
         ],
         check=True,
         capture_output=True,
         text=True,
     )
     expected = Trainer(load_policy(tmp_path / "policy")).evaluate(episodes("validation", 2))
-    assert json.loads(evaluation.stdout) == expected
+    actual = json.loads(evaluation.stdout)
+    assert actual["loss"] == pytest.approx(expected["loss"], rel=1e-6)
+    assert actual["episodes"] == expected["episodes"]
+    assert actual["labeled_steps"] == expected["labeled_steps"]
 
 
 def test_unlabeled_targets_do_not_affect_loss_or_training():
@@ -270,3 +275,49 @@ def test_early_stopping_restores_absolute_best_epoch():
 def test_invalid_early_stopping_configuration(options):
     with pytest.raises(ValueError):
         Trainer(model()).fit(episodes("train", 1), episodes("validation", 1), **options)
+
+
+@pytest.mark.parametrize("objective", ["regression", "classification"])
+def test_chunked_evaluation_preserves_state_masks_and_episode_weighting(objective):
+    m = ConnectomeModel(
+        Graph.synthetic(8, 0.3, 4),
+        input_ids=[0, 1],
+        readout_ids=list(range(8)),
+        input_size=2,
+        output_size=3,
+    )
+    rng = np.random.default_rng(11)
+    data = []
+    for i, length in enumerate([17, 29]):
+        x = rng.normal(size=(length, 2)).astype("f")
+        y = (
+            rng.normal(size=(length, 3)).astype("f")
+            if objective == "regression"
+            else rng.integers(0, 3, size=length)
+        )
+        mask = np.arange(length) % 3 == 0
+        mask[:8] = False  # Entire unlabeled chunks must still advance state.
+        y[~mask] = np.nan if objective == "regression" else -1
+        data.append(Episode(str(i), x, y, mask))
+    t = Trainer(m, objective=objective)
+    whole = t.evaluate(data, chunk_size=None)
+    calls = []
+    hook = m.register_forward_pre_hook(lambda module, args: calls.append(args[0].shape[1]))
+    try:
+        chunked = t.evaluate(data, chunk_size=4)
+    finally:
+        hook.remove()
+    assert max(calls) <= 4
+    assert chunked["loss"] == pytest.approx(whole["loss"], rel=1e-6)
+    assert chunked["labeled_steps"] == whole["labeled_steps"]
+    if objective == "classification":
+        assert chunked["accuracy"] == whole["accuracy"]
+    individual = [t.evaluate([e], chunk_size=4) for e in data]
+    weighted = sum(v["loss"] * v["labeled_steps"] for v in individual) / whole["labeled_steps"]
+    assert chunked["loss"] == pytest.approx(weighted)
+
+
+@pytest.mark.parametrize("chunk_size", [0, -1, True, 1.5])
+def test_evaluation_rejects_invalid_chunk_size(chunk_size):
+    with pytest.raises(ValueError, match="chunk_size"):
+        Trainer(model()).evaluate(episodes("test", 1), chunk_size=chunk_size)

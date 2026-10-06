@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add a complete real-MaleCNS task walkthrough with user-supplied regression datasets, three-seed zero-edge ablations and verified stateful inference.
+- Replace illustrative README neuron bindings with runnable commands, explicit outputs and measured limitations.
+
 ## 0.2.2
 
 - Add optional patience-based early stopping while restoring the absolute best validation epoch.

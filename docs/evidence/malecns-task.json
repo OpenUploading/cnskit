@@ -1,0 +1,81 @@
+{
+  "task": "synthetic temporal filtering",
+  "selection": "top incoming degree; parent weight normalization retained",
+  "nodes": 128,
+  "edges": 2291,
+  "fingerprint": "2695b18fe6ae5b566bcc0f1182f793aaadd5e26435137ef45357c73ef8316f6a",
+  "checkpoint_replay_exact": true,
+  "results": [
+    {
+      "seed": 7,
+      "model": "anatomical",
+      "test": {
+        "loss": 0.0005559839519264642,
+        "labeled_steps": 128,
+        "episodes": 4
+      },
+      "best_epoch": 30,
+      "trainable_parameters": 153
+    },
+    {
+      "seed": 7,
+      "model": "zero_edges",
+      "test": {
+        "loss": 0.0005605312289844733,
+        "labeled_steps": 128,
+        "episodes": 4
+      },
+      "best_epoch": 30,
+      "trainable_parameters": 153
+    },
+    {
+      "seed": 17,
+      "model": "anatomical",
+      "test": {
+        "loss": 0.0003533944982336834,
+        "labeled_steps": 128,
+        "episodes": 4
+      },
+      "best_epoch": 29,
+      "trainable_parameters": 153
+    },
+    {
+      "seed": 17,
+      "model": "zero_edges",
+      "test": {
+        "loss": 0.00035210933492635377,
+        "labeled_steps": 128,
+        "episodes": 4
+      },
+      "best_epoch": 29,
+      "trainable_parameters": 153
+    },
+    {
+      "seed": 27,
+      "model": "anatomical",
+      "test": {
+        "loss": 0.0005083692922198679,
+        "labeled_steps": 128,
+        "episodes": 4
+      },
+      "best_epoch": 30,
+      "trainable_parameters": 153
+    },
+    {
+      "seed": 27,
+      "model": "zero_edges",
+      "test": {
+        "loss": 0.0005002423749829177,
+        "labeled_steps": 128,
+        "episodes": 4
+      },
+      "best_epoch": 30,
+      "trainable_parameters": 153
+    }
+  ],
+  "mean_test_mse": {
+    "anatomical": 0.00047258258079333854,
+    "zero_edges": 0.0004709609796312482
+  },
+  "scope": "Engineering experiment; not measured behavior or a general reasoning benchmark"
+}

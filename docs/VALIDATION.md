@@ -18,6 +18,27 @@ python examples/validate_malecns.py --graph /data/traced-graph --out runs/real-v
 
 ## Does graph structure help this example?
 
+### Real-anatomy task walkthrough
+
+The [complete MaleCNS task example](../examples/malecns_task.py) was run on the same CPU environment on October 5, 2026 (Pacific). It selects 128 cells by incoming degree, retaining 2,291 edges and parent normalization. Inputs and regression targets are generated temporal-filter sequences, not measured animal behavior. Training, validation and test use 12/4/4 episodes, 32 steps each, generated once with split seeds 1/2/3. Both variants have 153 trainable parameters and use the same 30-epoch budget; validation selects the epoch independently.
+
+| Initialization seed | MaleCNS subgraph test MSE | Zero-edge test MSE |
+|---|---:|---:|
+| 7 | 0.00055598 | 0.00056053 |
+| 17 | 0.00035339 | 0.00035211 |
+| 27 | 0.00050837 | 0.00050024 |
+| Mean | 0.00047258 | 0.00047096 |
+
+This task shows no consistent anatomical benefit. Three initializations on one fixed dataset are not independent task replications or a statistical significance study. The retained normalization and broad engineering selection may limit recurrent contributions; neither has been tuned on test results. The first requested seed is exported, rather than selecting a seed by test error. Checkpoint and chunked inference replay exactly.
+
+[Machine-readable results](evidence/malecns-task.json). Reproduce with:
+
+```sh
+python examples/malecns_task.py --graph /data/traced-graph --out runs/malecns-task
+```
+
+### Synthetic graph baseline comparison
+
 [Machine-readable comparison](evidence/synthetic-baselines.json). Same temporal inputs, episode splits, 30 epochs, Adam learning rate 0.02, gradient norm cap 1.0, seed 7 and validation selection. A whole 32-step episode fits the truncation window. The RNN has five hidden units; parameters are close but not identical.
 
 | Model | Trainable parameters | Test MSE |

@@ -17,7 +17,7 @@ CNSKit connects MaleCNS graph data to a practical Python workflow: bind observat
 
 | Workflow | Implementation |
 |---|---|
-| Custom sequence regression or classification | Episode datasets, target masks, Adam, gradient clipping, truncated backpropagation |
+| Custom sequence regression or classification | Episode datasets, partial labels, early stopping, Adam and truncated backpropagation |
 | Fixed-graph experimentation | Train only a readout, input/output adapters, or adapters plus bounded per-neuron gains and leak |
 | MaleCNS integration | Verified graph import, exact body-ID binding, explicit induced subgraphs |
 | Stateful inference | Batched sequences or one step at a time; state is passed explicitly |
@@ -54,28 +54,50 @@ prediction, state = policy.predict(np.zeros((1, 16, 2), dtype="float32"))
 prediction, state = policy.predict(np.ones((1, 8, 2), dtype="float32"), state=state)
 ```
 
-## Use the anatomical graph
+## Run a complete MaleCNS experiment
 
-Prepare the official files following the [dataset guide](docs/MALECNS.md). Then bind task dimensions and actual neuron IDs explicitly:
+Prepare the official data using the [dataset guide](docs/MALECNS.md), then run:
 
-```python
-from cnskit import Graph, ConnectomeModel, Trainer
-
-graph = Graph.from_malecns("/data/traced-graph")
-model = ConnectomeModel(
-    graph, input_ids=[12032], readout_ids=[10001, 10010],
-    input_size=4, output_size=2, mode="adapters", seed=7,
-    input_names=["cue_left", "cue_right", "speed", "context"],
-    output_names=["turn", "advance"],
-)
-# train_episodes and validation_episodes contain YOUR aligned inputs and targets.
-report = Trainer(model, objective="regression", tbptt=32).fit(
-    train_episodes, validation_episodes, epochs=30, patience=5,
-)
-model.save("runs/my-policy", report=report)
+```sh
+python examples/malecns_task.py --graph /data/traced-graph --out runs/malecns-task
 ```
 
-These IDs illustrate API binding, not an established mapping from arbitrary four-dimensional observations to fly behavior. For development, begin with an explicit subgraph and short sequences. The full traced graph has tens of millions of edges; full-graph differentiation has material memory and compute costs. CPU validation is recorded in [the evidence report](docs/VALIDATION.md); CUDA execution is supported by tensor placement but has not been benchmarked here.
+This is **real MaleCNS anatomy with a synthetic regression task**. The script selects 128 neurons deterministically from the loaded graph, fits input/output adapters, and evaluates three initialization seeds against a zero-edge ablation using the same observations, splits and training budget. It exports the first requested seed, never the seed with the best test score.
+
+| Output | What it contains |
+|---|---|
+| `task.json` | Actual selected body IDs and a reusable CLI configuration |
+| `train.npz`, `validation.npz`, `test.npz` | Separate episodes with inputs, targets and IDs |
+| `policy/` | Graph-bound model, fitted normalization and training report |
+| `results.json` | Per-seed held-out errors and the ablation comparison |
+| `observations.npy`, `predictions.npy` | A replay input and verified inference output |
+
+Evaluate or use the exported model without rerunning training:
+
+```sh
+cnskit evaluate --policy runs/malecns-task/policy --data runs/malecns-task/test.npz --objective regression
+cnskit predict --policy runs/malecns-task/policy --input runs/malecns-task/observations.npy --out runs/replayed.npy
+```
+
+The example checks exact checkpoint replay and chunked stateful inference. Output paths must be new. It loads the full prepared graph before selecting a subgraph; selection does not eliminate the import's memory requirement.
+
+## Bring your own task
+
+Supply observations `[episode, time, input]`, regression targets `[episode, time, output]`, unique string `episode_ids`, and an optional boolean `mask` in each NPZ split. Masked labels may be missing; all observations must remain finite. Split by independent sessions or environments rather than adjacent frames.
+
+```sh
+python examples/malecns_task.py --graph /data/traced-graph --out runs/my-task --train train.npz --validation validation.npz --test test.npz
+```
+
+Input/output dimensions are inferred from your data. The default neuron selection is an engineering starting point, not a validated sensory-to-motor pathway. Use the exported `task.json` and [Python API](docs/LEARNING_API.md) to define a task-relevant circuit, named channels and adaptation mode. For classification, see the [classification example](examples/train_classification.py) and [training guide](docs/TRAINING.md).
+
+## Evidence and current limits
+
+- **Numerical correctness:** five full-graph forward steps on 165,122 neurons and 25,563,197 edges matched an independent SciPy calculation to 5.96e-8 maximum absolute error.
+- **Software verification:** 37 tests cover training, masking, early stopping, explicit-state inference, CLI evaluation and checkpoint integrity; CI runs Python 3.11 and 3.13.
+- **Task value:** the included temporal-filter experiments test the workflow. They do not establish a MaleCNS advantage; the published synthetic-graph comparison favors the zero-edge ablation.
+
+See [measurements and reproducible commands](docs/VALIDATION.md). Full-graph differentiation, CUDA throughput, optimizer-state resume and biological behavior validation remain open work. The SDK is suitable for controlled research experiments; it is not yet a production training platform.
 
 ## Compatibility and scope
 
